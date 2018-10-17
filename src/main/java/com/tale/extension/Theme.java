@@ -1,12 +1,11 @@
 package com.tale.extension;
 
-import com.blade.jdbc.page.Page;
 import com.blade.kit.JsonKit;
 import com.blade.kit.StringKit;
 import com.blade.kit.json.Ason;
 import com.blade.mvc.WebContext;
 import com.blade.mvc.http.Request;
-import com.tale.init.TaleConst;
+import com.tale.bootstrap.TaleConst;
 import com.tale.model.dto.Comment;
 import com.tale.model.dto.Types;
 import com.tale.model.entity.Comments;
@@ -14,11 +13,18 @@ import com.tale.model.entity.Contents;
 import com.tale.model.entity.Metas;
 import com.tale.service.SiteService;
 import com.tale.utils.TaleUtils;
+import io.github.biezhi.anima.enums.OrderBy;
+import io.github.biezhi.anima.page.Page;
 import jetbrick.template.runtime.InterpretContext;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import static io.github.biezhi.anima.Anima.select;
 
 /**
  * 主题函数
@@ -28,8 +34,6 @@ import java.util.*;
 public final class Theme {
 
     private static SiteService siteService;
-
-    public static final List EMPTY = new ArrayList(0);
 
     public static void setSiteService(SiteService ss) {
         siteService = ss;
@@ -280,6 +284,25 @@ public final class Theme {
     }
 
     /**
+     * 截取文章摘要(返回HTML)
+     *
+     * @param value 文章内容
+     * @return 转换 markdown 为 html
+     */
+    public static String intro(String value) {
+        if (StringKit.isBlank(value)) {
+            return null;
+        }
+        int pos = value.indexOf("<!--more-->");
+        if (pos != -1) {
+            String html = value.substring(0, pos);
+            return TaleUtils.mdToHtml(html);
+        } else {
+            return TaleUtils.mdToHtml(value);
+        }
+    }
+
+    /**
      * 截取文章摘要
      *
      * @param value 文章内容
@@ -324,7 +347,9 @@ public final class Theme {
             return "";
         }
         if (StringKit.isNotBlank(contents.getThumbImg())) {
-            return contents.getThumbImg();
+            String newFileName       = TaleUtils.getFileName(contents.getThumbImg());
+            String thumbnailImgUrl = (contents.getThumbImg()).replace(newFileName, "thumbnail_" + newFileName);
+            return thumbnailImgUrl;
         }
         String content = article(contents.getContent());
         String img     = Commons.show_thumb(content);
@@ -419,7 +444,7 @@ public final class Theme {
      */
     public static List<Contents> recent_articles(int limit) {
         if (null == siteService) {
-            return EMPTY;
+            return new ArrayList<>(0);
         }
         return siteService.getContens(Types.RECENT_ARTICLE, limit);
     }
@@ -432,7 +457,7 @@ public final class Theme {
      */
     public static List<Contents> rand_articles(int limit) {
         if (null == siteService) {
-            return EMPTY;
+            return new ArrayList<>(0);
         }
         return siteService.getContens(Types.RANDOM_ARTICLE, limit);
     }
@@ -445,7 +470,7 @@ public final class Theme {
      */
     public static List<Comments> recent_comments(int limit) {
         if (null == siteService) {
-            return EMPTY;
+            return new ArrayList<>(0);
         }
         return siteService.recentComments(limit);
     }
@@ -457,7 +482,7 @@ public final class Theme {
      */
     public static List<Metas> categories(int limit) {
         if (null == siteService) {
-            return EMPTY;
+            return new ArrayList<>(0);
         }
         return siteService.getMetas(Types.RECENT_META, Types.CATEGORY, limit);
     }
@@ -470,7 +495,7 @@ public final class Theme {
      */
     public static List<Metas> rand_categories(int limit) {
         if (null == siteService) {
-            return EMPTY;
+            return new ArrayList<>(0);
         }
         return siteService.getMetas(Types.RANDOM_META, Types.CATEGORY, limit);
     }
@@ -491,7 +516,7 @@ public final class Theme {
      */
     public static List<Metas> tags(int limit) {
         if (null == siteService) {
-            return EMPTY;
+            return new ArrayList<>(0);
         }
         return siteService.getMetas(Types.RECENT_META, Types.TAG, limit);
     }
@@ -504,7 +529,7 @@ public final class Theme {
      */
     public static List<Metas> rand_tags(int limit) {
         if (null == siteService) {
-            return EMPTY;
+            return new ArrayList<>(0);
         }
         return siteService.getMetas(Types.RANDOM_META, Types.TAG, limit);
     }
@@ -618,7 +643,8 @@ public final class Theme {
         if (null != value) {
             page = (int) value;
         }
-        return siteService.getComments(contents.getCid(), page, limit);
+        Page<Comment> comments = siteService.getComments(contents.getCid(), page, limit);
+        return comments;
     }
 
     /**
@@ -633,7 +659,11 @@ public final class Theme {
         page = null == page ? request.queryInt("page", 1) : page;
         page = page < 0 || page > TaleConst.MAX_PAGE ? 1 : page;
 
-        Page<Contents> articles = new Contents().where("type", Types.ARTICLE).and("status", Types.PUBLISH).page(page, limit, "created desc");
+        Page<Contents> articles = select().from(Contents.class)
+                .where(Contents::getType, Types.ARTICLE)
+                .and("status", Types.PUBLISH)
+                .order(Contents::getCreated, OrderBy.DESC)
+                .page(page, limit);
 
         request.attribute("articles", articles);
         if (page > 1) {
@@ -698,7 +728,7 @@ public final class Theme {
         return TaleConst.OPTIONS.get("theme_" + theme + "_options")
                 .filter(StringKit::isNotBlank)
                 .map((String json) -> {
-                    Ason ason = JsonKit.toAson(json);
+                    Ason<?,?> ason = JsonKit.toAson(json);
                     if (!ason.containsKey(key)) {
                         return "";
                     }

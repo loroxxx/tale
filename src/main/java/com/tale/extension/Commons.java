@@ -1,17 +1,14 @@
 package com.tale.extension;
 
-import com.blade.jdbc.page.Page;
 import com.blade.kit.*;
+import com.tale.bootstrap.TaleConst;
 import com.tale.controller.BaseController;
-import com.tale.init.TaleConst;
 import com.tale.service.SiteService;
 import com.tale.utils.TaleUtils;
 import com.vdurmont.emoji.EmojiParser;
+import io.github.biezhi.anima.page.Page;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,12 +19,9 @@ import java.util.regex.Pattern;
  */
 public final class Commons {
 
-    private static SiteService siteService;
-
     private static final String TEMPLATES = "/templates/";
 
     public static void setSiteService(SiteService ss) {
-        siteService = ss;
         Theme.setSiteService(ss);
     }
 
@@ -37,7 +31,7 @@ public final class Commons {
      * @param paginator
      * @return
      */
-    public static boolean is_empty(Page paginator) {
+    public static boolean is_empty(Page<?> paginator) {
         return null == paginator || BladeKit.isEmpty(paginator.getRows());
     }
 
@@ -95,6 +89,15 @@ public final class Commons {
      */
     public static String site_subtitle() {
         return site_option("site_subtitle");
+    }
+
+    /**
+     * 是否允许使用云公共静态资源
+     *
+     * @return
+     */
+    public static String allow_cloud_CDN() {
+        return site_option("allow_cloud_CDN");
     }
 
     /**

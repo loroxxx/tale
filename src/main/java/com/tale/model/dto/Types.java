@@ -1,6 +1,8 @@
 package com.tale.model.dto;
 
 /**
+ * Types
+ *
  * Created by biezhi on 2017/2/21.
  */
 public interface Types {
@@ -13,7 +15,6 @@ public interface Types {
     String DRAFT = "draft";
     String IMAGE = "image";
     String FILE = "file";
-    String CSRF_TOKEN = "csrf_token";
     String COMMENTS_FREQUENCY = "comments:frequency";
 
     String RECENT_ARTICLE = "recent_article";
@@ -22,9 +23,7 @@ public interface Types {
     String RECENT_META = "recent_meta";
     String RANDOM_META = "random_meta";
 
-    String C_STATISTICS = "sys:statistics";
-
-    String C_ARTICLE_HITS = "article:hits";
+    String SYS_STATISTICS = "sys:statistics";
 
     String NEXT = "next";
     String PREV = "prev";
@@ -33,6 +32,7 @@ public interface Types {
      * 附件存放的URL，默认为网站地址，如集成第三方则为第三方CDN域名
      */
     String ATTACH_URL = "attach_url";
+    String CDN_URL = "cdn_url";
 
     /**
      * 网站要过滤，禁止访问的ip列表
